@@ -1,0 +1,56 @@
+﻿@page "/article"
+
+<EditForm OnValidSubmit="FilterByTag" Model="_filterByTagModel">
+    <InputText @bind-Value="_filterByTagModel.Tag" class="form-control mb-3" placeholder="Write a tag..."></InputText>
+</EditForm>
+
+@if (Articles is not null && Articles.Any())
+{
+    <div class="container">
+        <div class="row gap-3">
+            @foreach (var article in Articles)
+            {
+                <div class="col-3">
+                    <div class="card" style="width: 18rem;">
+                        <img src="@article.SocialImage" class="card-img-top" alt="...">
+                        <div class="card-body">
+                            <h5 class="card-title">@article.Title</h5>
+                            <p class="card-text">@article.Description</p>
+                            <a href="@article.Url" target="_blank" class="btn btn-primary">Read</a>
+                        </div>
+                    </div>
+                </div>
+            }
+
+        </div>
+    </div>
+}
+
+@code
+{
+    public List<Article>? Articles { get; set; }
+    readonly SearchModel _filterByTagModel = new();
+    readonly IDevToApi _api = RestService.For<IDevToApi>("https://dev.to/api");
+
+    protected override async Task OnInitializedAsync()
+    {
+        Articles = await _api.GetFreshArticles(10);
+    }
+
+    private async Task FilterByTag()
+    {
+        if (!string.IsNullOrWhiteSpace(_filterByTagModel.Tag))
+        {
+            Articles = await _api.GetArticlesByTag(10, _filterByTagModel.Tag);
+        }
+        else
+        {
+            Articles = await _api.GetFreshArticles(10);
+        }
+    }
+
+    public class SearchModel
+    {
+        public string? Tag { get; set; }
+    }
+}
